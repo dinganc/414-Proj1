@@ -1,0 +1,67 @@
+---
+title: "CitiBike"
+author: "Derek"
+date: "2/17/2018"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#4 How does weather impact ridership?
+####Reading the data
+```{r}
+library(geosphere)
+df_names=c('SAMPLE.csv','SAMPLE2.csv')
+ride=data.frame()
+for (i in df_names){
+  ride=rbind(ride,read.csv(i))
+}
+weather=read.csv('weather_data.csv')
+#weather impact on people of different group
+#snow tolerance for different ages
+#weather impact on differnt stations
+#temperature impact on ridership
+#run it as a logistic regression
+```
+####Extract features
+```{r}
+age_group=function (age){
+  if (age<=22){return ('Young Students')}
+  else if (age<=30){return ('Young Professionals')}
+  }
+
+ride$distance <- distHaversine(ride[ ,c("start.station.longitude", "start.station.latitude")],ride[ ,c("end.station.longitude", "end.station.latitude")])
+ride$gender=factor(ride$gender,levels=c(0,1,2),labels=c("unkown","male","female"))
+ride$date=factor(format(strptime(ride$starttime,format = "%m/%d/%Y %H:%M"),"%m/%d/%Y"))
+ride$age=2016-ride$birth.year
+
+ride$birth.year=NULL
+ride$starttime=NULL
+ride$stoptime=NULL
+ride$start.station.latitude=NULL
+ride$end.station.latitude=NULL
+ride$start.station.longitude=NULL
+ride$end.station.longitude=NULL
+ride$start.station.id=NULL
+ride$end.station.id=NULL
+ride$bikeid=NULL
+
+weather$STATION=NULL
+weather$STATION_NAME=NULL
+weather$DATE=factor(format(strptime(weather$DATE,format = "%Y%m%d"),"%m/%d/%Y"))
+
+na.omit(weather)
+na.omit(ride)
+```
+####Aggreate the individual ridership data into daily ridership data
+```{r}
+dates=unique(ride$date)
+agg_data=data.frame()
+for (i in dates){
+  
+}
+```
+

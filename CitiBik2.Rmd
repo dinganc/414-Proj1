@@ -1,0 +1,100 @@
+---
+title: "CitiBike"
+author: "Derek"
+date: "2/17/2018"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#4 How does weather impact ridership?
+####Reading the data
+```{r}
+library(geosphere)
+#df_names=c('SAMPLE.csv','SAMPLE2.csv')
+df_names=c("201601-citibike-tripdata.csv")
+ride=data.frame()
+for (i in df_names){
+  ride=rbind(ride,read.csv(i))
+}
+weather=read.csv('weather_data.csv')
+#weather impact on people of different group
+#snow tolerance for different ages
+#temperature impact on ridership
+#run it as a logistic regression
+```
+####Extract features
+```{r}
+age_group=function (age){
+  if (age<=22){return ('Young Students')}
+  else if (age<=30){return ('Young Professionals')}
+  }
+
+ride$distance <- distHaversine(ride[ ,c("start.station.longitude", "start.station.latitude")],ride[ ,c("end.station.longitude", "end.station.latitude")])
+ride$gender=factor(ride$gender,levels=c(0,1,2),labels=c("unkown","male","female"))
+ride$date=factor(format(strptime(ride$starttime,format = "%m/%d/%Y %H:%M"),"%m/%d/%Y"))
+ride$age=2016-ride$birth.year
+
+ride$birth.year=NULL
+ride$starttime=NULL
+ride$stoptime=NULL
+ride$start.station.latitude=NULL
+ride$end.station.latitude=NULL
+ride$start.station.longitude=NULL
+ride$end.station.longitude=NULL
+ride$start.station.id=NULL
+ride$end.station.id=NULL
+ride$bikeid=NULL
+ride$DATE=ride$date
+ride$date=NULL
+
+weather$STATION=NULL
+weather$STATION_NAME=NULL
+weather$DATE=factor(format(strptime(weather$DATE,format = "%Y%m%d"),"%m/%d/%Y"))
+
+na.omit(weather)
+na.omit(ride)
+
+```
+####Merge the bike dataframe with the weather dataframe, so each row of the ride information will have weather infomation for that date
+```{r}
+combined_df=merge(x = ride, y = weather, by = "DATE", all.x = TRUE)
+library(ggplot2)
+library(dplyr)
+```
+####Does snow/rain impact each customer group, in terms of ride time and ride displacement?
+#####First, let's plot the distribution and see if there is a clear pattern
+```{r}
+ggplot()+geom_point(aes(x=PRCP,y=tripduration,color='Rain Impact on Customer'),combined_df[combined_df$usertype=='Customer',])+geom_point(aes(x=PRCP,y=tripduration,color='Rain Impact on Subscriber'),combined_df[combined_df$usertype=='Subscriber',])
+
+ggplot()+geom_point(aes(x=SNOW,y=tripduration,color='Snow Impact on Customer'),combined_df[combined_df$usertype=='Customer',])+geom_point(aes(x=SNOW,y=tripduration,color='Snow Impact on Subscriber'),combined_df[combined_df$usertype=='Subscriber',])
+```
+#####Then, let's use regression to apporximate a curve that represents the relationship between riding activity level and weather infomation. Because there is a huge dataset, we will take a random example of 100,000 datapoints for each customer group.
+```{r}
+grouped_df_customer=combined_df[sample(nrow(combined_df[combined_df$usertype=='Customer',]),100000,replace=TRUE),]
+grouped_df_subscriber=combined_df[sample(nrow(combined_df[combined_df$usertype=='Subscriber',]),100000,replace=TRUE),]
+
+#model_customer_snow <- lm(tripduration ~ poly(SNOW,2), data=grouped_df_customer)
+model_customer_snow <- lm(tripduration ~ SNOW, data=grouped_df_customer)
+
+#cutomer_snow_predict=predict(model_customer_snow)
+
+plot(tripduration~SNOW,grouped_df_customer)
+curve(predict(model_customer_snow,newdata=data.frame(wt=x)),add=T)
+```
+####Does snow/rain impact each age group, in terms of ride time and ride displacement?
+```{r}
+
+```
+####Does temeprature impact each customer group, in terms of ride time and ride displacement?
+```{r}
+
+```
+####Does temperature impact each age group, in terms of ride time and ride displacement?
+```{r}
+
+```
+
